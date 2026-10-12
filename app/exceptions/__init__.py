@@ -17,7 +17,6 @@ __all__ = [
     "EmployeeEmailAlreadyExistError",
     "employee_email_exist_handler",
     "DepartmentAlreadyExistError",
-    "department_already_exist_handler,"
-    "department_not_found_handler",
+    "department_already_exist_handler," "department_not_found_handler",
     "DepartmentNotFoundError",
 ]

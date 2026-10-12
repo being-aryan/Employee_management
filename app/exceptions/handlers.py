@@ -18,29 +18,32 @@ async def employee_not_found_handler(
         content={"detail": str(exc)},
     )
 
+
 async def employee_email_exist_handler(
-        request : Request,
-        exc: EmployeeEmailAlreadyExistError,
-)-> JSONResponse:
+    request: Request,
+    exc: EmployeeEmailAlreadyExistError,
+) -> JSONResponse:
     return JSONResponse(
         status_code=409,
         content={"detail": str(exc)},
     )
 
+
 async def department_already_exist_handler(
-        request: Request,
-        exc: DepartmentAlreadyExistError,
-)->JSONResponse:
+    request: Request,
+    exc: DepartmentAlreadyExistError,
+) -> JSONResponse:
     return JSONResponse(
         status_code=409,
-        content={"detail":str(exc)},
+        content={"detail": str(exc)},
     )
 
+
 async def department_not_found_handler(
-        request:Request,
-        exc:DepartmentNotFoundError,
-)->JSONResponse:
+    request: Request,
+    exc: DepartmentNotFoundError,
+) -> JSONResponse:
     return JSONResponse(
         status_code=409,
-        content={"detail":str(exc)},
+        content={"detail": str(exc)},
     )

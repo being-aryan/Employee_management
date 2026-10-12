@@ -1,15 +1,18 @@
 from fastapi import APIRouter
 
-from app.manager import create_department, get_all_departement
+from app.managers import department_manager
 
 router = APIRouter(
     prefix="/departments",
-    tags=["Department"],
+    tags=["Departments"],
 )
 
-@router.get("", response_model=list[str])
-def get_departments()-> list[str]:
-    return get_all_departement()
+
+@router.get("")
+def get_departments() -> list[str]:
+    return department_manager.get_all_departement()
+
+
 @router.post("")
-def create_deparment_data(deparment:str)->str:
-    return create_department(deparment)
+def create_department_route(department: str) -> str:
+    return department_manager.create_department(department)
