@@ -11,13 +11,59 @@ from app.schemas import (
     EmployeeStatusUpdate,
     EmployeeUpdate,
 )
+from app.storage.json_storage import read_json, write_json
+
+DEFAULT_EMPLOYEES: list[dict[str, object]] = [
+    {
+        "id": 1,
+        "name": "Aarav Sharma",
+        "email": "aarav@example.com",
+        "department": "Backend",
+        "salary": 600000,
+        "status": "active",
+    },
+    {
+        "id": 2,
+        "name": "Priya Verma",
+        "email": "priya@example.com",
+        "department": "IT",
+        "salary": 550000,
+        "status": "active",
+    },
+    {
+        "id": 3,
+        "name": "Rahul Singh",
+        "email": "rahul@example.com",
+        "department": "BA",
+        "salary": 450000,
+        "status": "on_leave",
+    },
+]
 
 
 class EmployeeManager:
     def __init__(self, department_manager: DepartmentManager) -> None:
-        self.employees: list[Employee] = []
-        self.next_employee_id = 1
+        employee_data = read_json("employees.json", DEFAULT_EMPLOYEES)
+
+        self.employees: list[Employee] = [
+            Employee.model_validate(item) for item in employee_data
+        ]
+
+        self.next_employee_id = (
+            max(
+                (employee.id for employee in self.employees),
+                default=0,
+            )
+            + 1
+        )
+
         self.department_manager = department_manager
+
+    def _save_employees(self) -> None:
+        employee_data = [
+            employee.model_dump(mode="json") for employee in self.employees
+        ]
+        write_json("employees.json", employee_data)
 
     def get_all_employees(self) -> list[Employee]:
         return self.employees
@@ -35,14 +81,14 @@ class EmployeeManager:
                 )
 
         employee_data = employee.model_dump()
-
         new_employee = Employee(
             id=self.next_employee_id,
             **employee_data,
         )
 
-        self.next_employee_id += 1
         self.employees.append(new_employee)
+        self.next_employee_id += 1
+        self._save_employees()
 
         return new_employee
 
@@ -65,12 +111,22 @@ class EmployeeManager:
 
         for index, existing_employee in enumerate(self.employees):
             if existing_employee.id == employee_id:
+                for other_employee in self.employees:
+                    if (
+                        other_employee.id != employee_id
+                        and other_employee.email == employee.email
+                    ):
+                        raise EmployeeEmailAlreadyExistError(
+                            "Employee with this email already exists"
+                        )
+
                 updated_employee = Employee(
                     id=employee_id,
                     **employee.model_dump(),
                 )
-
                 self.employees[index] = updated_employee
+                self._save_employees()
+
                 return updated_employee
 
         raise EmployeeNotFoundError("Employee not found")
@@ -95,10 +151,31 @@ class EmployeeManager:
                             f"Department '{department}' does not exist"
                         )
 
-                for key, value in update_data.items():
-                    setattr(existing_employee, key, value)
+                if "email" in update_data:
+                    email = update_data["email"]
 
-                return existing_employee
+                    if email is None:
+                        raise ValueError("Email cannot be null")
+
+                    for other_employee in self.employees:
+                        if (
+                            other_employee.id != employee_id
+                            and other_employee.email == email
+                        ):
+                            raise EmployeeEmailAlreadyExistError(
+                                "Employee with this email already exists"
+                            )
+
+                updated_data = existing_employee.model_dump()
+                updated_data.update(update_data)
+
+                updated_employee = Employee.model_validate(updated_data)
+                index = self.employees.index(existing_employee)
+                self.employees[index] = updated_employee
+
+                self._save_employees()
+
+                return updated_employee
 
         raise EmployeeNotFoundError("Employee not found")
 
@@ -107,10 +184,15 @@ class EmployeeManager:
         employee_id: int,
         status_update: EmployeeStatusUpdate,
     ) -> Employee:
-        for employee in self.employees:
+        for index, employee in enumerate(self.employees):
             if employee.id == employee_id:
-                employee.status = status_update.status
-                return employee
+                updated_employee = employee.model_copy(
+                    update={"status": status_update.status}
+                )
+                self.employees[index] = updated_employee
+                self._save_employees()
+
+                return updated_employee
 
         raise EmployeeNotFoundError("Employee not found")
 
@@ -118,6 +200,8 @@ class EmployeeManager:
         for employee in self.employees:
             if employee.id == employee_id:
                 self.employees.remove(employee)
+                self._save_employees()
+
                 return {"message": "Employee deleted successfully."}
 
         raise EmployeeNotFoundError("Employee not found")

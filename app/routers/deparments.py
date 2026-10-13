@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.dependencies import get_current_admin
 from app.managers import department_manager
 
 router = APIRouter(
     prefix="/departments",
     tags=["Departments"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 

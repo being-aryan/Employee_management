@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.dependencies import get_current_admin
 from app.managers import employee_manager
 from app.schemas import (
     CreateEmployee,
@@ -14,6 +15,7 @@ from app.schemas import (
 router = APIRouter(
     prefix="/employees",
     tags=["Employees"],
+    dependencies=[Depends(get_current_admin)],
 )
 
 

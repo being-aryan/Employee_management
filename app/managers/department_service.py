@@ -1,15 +1,21 @@
 from app.exceptions import DepartmentAlreadyExistError
+from app.storage.json_storage import read_json, write_json
+
+DEFAULT_DEPARTMENTS: list[str] = [
+    "Backend",
+    "IT",
+    "Sales&Marketing",
+    "BA",
+    "Project Manager",
+]
 
 
 class DepartmentManager:
     def __init__(self) -> None:
-        self.departments: list[str] = [
-            "Backend",
-            "IT",
-            "Sales&Marketing",
-            "BA",
-            "Project Manager",
-        ]
+        self.departments: list[str] = read_json(
+            "departments.json",
+            DEFAULT_DEPARTMENTS,
+        )
 
     def get_all_departement(self) -> list[str]:
         return self.departments
@@ -20,6 +26,9 @@ class DepartmentManager:
                 raise DepartmentAlreadyExistError("Department already exists in data")
 
         self.departments.append(department)
+
+        write_json("departments.json", self.departments)
+
         return department
 
     def department_exists(self, department: str) -> bool:

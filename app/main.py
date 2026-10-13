@@ -16,6 +16,7 @@ from app.exceptions.handlers import (
     employee_not_found_handler,  # noqa: F811
 )
 from app.routers import router as e
+from app.routers.auth import router as auth_router
 from app.routers.deparments import router as d
 
 app = FastAPI(
@@ -39,5 +40,6 @@ app.add_exception_handler(
     department_not_found_handler,
 )
 
+app.include_router(auth_router)
 app.include_router(e)
 app.include_router(d)
