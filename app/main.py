@@ -6,14 +6,9 @@ from app.exceptions import (
     EmployeeEmailAlreadyExistError,
     EmployeeNotFoundError,
     department_already_exist_handler,
+    department_not_found_handler,
     employee_email_exist_handler,
     employee_not_found_handler,
-)
-from app.exceptions.handlers import (
-    department_already_exist_handler,  # noqa: F811
-    department_not_found_handler,  # noqa: F401
-    employee_email_exist_handler,  # noqa: F811
-    employee_not_found_handler,  # noqa: F811
 )
 from app.routers import router as e
 from app.routers.auth import router as auth_router

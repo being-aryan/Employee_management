@@ -1,6 +1,7 @@
+
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.dependencies import get_current_admin
 from app.managers import employee_manager
@@ -36,6 +37,13 @@ def get_all_employees() -> list[Employee]:
 
 @router.get("/search", response_model=list[Employee])
 def search_employees(
+    q: Annotated[str, Query(min_length=1, max_length=100)],
+) -> list[Employee]:
+    return employee_manager.search_employees(q)
+
+
+@router.get("/filter", response_model=list[Employee])
+def filter_employees(
     department: str | None = None,
     status: str | None = None,
     min_salary: Annotated[float | None, Query(ge=0)] = None,
@@ -43,11 +51,11 @@ def search_employees(
 ) -> list[Employee]:
     if min_salary is not None and max_salary is not None and min_salary > max_salary:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="min_salary cannot be greater than max_salary",
         )
 
-    return employee_manager.search_employees(
+    return employee_manager.filter_employees(
         department=department,
         status=status,
         min_salary=min_salary,
@@ -84,10 +92,16 @@ def update_employee_partial(
     employee_id: int,
     employee_update: EmployeeUpdate,
 ) -> Employee:
-    return employee_manager.update_employee_partial(
-        employee_id,
-        employee_update,
-    )
+    try:
+        return employee_manager.update_employee_partial(
+            employee_id,
+            employee_update,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
 
 
 @router.delete("/{employee_id}")

@@ -5,8 +5,8 @@ from .employee import (
     EmployeeNotFoundError,
 )
 from .handlers import (
-    department_already_exist_handler,  # noqa: F401
-    department_not_found_handler,  # noqa: F401
+    department_already_exist_handler,
+    department_not_found_handler,
     employee_email_exist_handler,
     employee_not_found_handler,
 )
@@ -17,6 +17,7 @@ __all__ = [
     "EmployeeEmailAlreadyExistError",
     "employee_email_exist_handler",
     "DepartmentAlreadyExistError",
-    "department_already_exist_handler," "department_not_found_handler",
+    "department_already_exist_handler",
+    "department_not_found_handler",
     "DepartmentNotFoundError",
 ]

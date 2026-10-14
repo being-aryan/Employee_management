@@ -114,7 +114,7 @@ class EmployeeManager:
                 for other_employee in self.employees:
                     if (
                         other_employee.id != employee_id
-                        and other_employee.email == employee.email
+                        and other_employee.email.lower() == employee.email.lower()
                     ):
                         raise EmployeeEmailAlreadyExistError(
                             "Employee with this email already exists"
@@ -136,48 +136,55 @@ class EmployeeManager:
         employee_id: int,
         employee_update: EmployeeUpdate,
     ) -> Employee:
-        for existing_employee in self.employees:
-            if existing_employee.id == employee_id:
-                update_data = employee_update.model_dump(exclude_unset=True)
+        employee_to_update = next(
+            (employee for employee in self.employees if employee.id == employee_id),
+            None,
+        )
 
-                if "department" in update_data:
-                    department = update_data["department"]
+        if employee_to_update is None:
+            raise EmployeeNotFoundError("Employee not found")
 
-                    if department is None:
-                        raise ValueError("Department cannot be null")
+        update_data = employee_update.model_dump(exclude_unset=True)
 
-                    if not self.department_manager.department_exists(department):
-                        raise DepartmentNotFoundError(
-                            f"Department '{department}' does not exist"
-                        )
+        if not update_data:
+            return employee_to_update
+        for field_name, field_value in update_data.items():
+            if field_value is None:
+                raise ValueError(
+                    f"{field_name.replace('_', ' ').capitalize()} cannot be null"
+                )
 
-                if "email" in update_data:
-                    email = update_data["email"]
+        if "department" in update_data:
+            department = update_data["department"]
 
-                    if email is None:
-                        raise ValueError("Email cannot be null")
+            if not self.department_manager.department_exists(department):
+                raise DepartmentNotFoundError(
+                    f"Department '{department}' does not exist"
+                )
 
-                    for other_employee in self.employees:
-                        if (
-                            other_employee.id != employee_id
-                            and other_employee.email == email
-                        ):
-                            raise EmployeeEmailAlreadyExistError(
-                                "Employee with this email already exists"
-                            )
+        if "email" in update_data:
+            email = update_data["email"]
 
-                updated_data = existing_employee.model_dump()
-                updated_data.update(update_data)
+            for other_employee in self.employees:
+                if (
+                    other_employee.id != employee_id
+                    and other_employee.email.lower() == email.lower()
+                ):
+                    raise EmployeeEmailAlreadyExistError(
+                        "Employee with this email already exists"
+                    )
 
-                updated_employee = Employee.model_validate(updated_data)
-                index = self.employees.index(existing_employee)
-                self.employees[index] = updated_employee
+        updated_data = employee_to_update.model_dump()
+        updated_data.update(update_data)
 
-                self._save_employees()
+        updated_employee = Employee.model_validate(updated_data)
 
-                return updated_employee
+        index = self.employees.index(employee_to_update)
+        self.employees[index] = updated_employee
 
-        raise EmployeeNotFoundError("Employee not found")
+        self._save_employees()
+
+        return updated_employee
 
     def update_employee_status(
         self,
@@ -206,7 +213,7 @@ class EmployeeManager:
 
         raise EmployeeNotFoundError("Employee not found")
 
-    def search_employees(
+    def filter_employees(
         self,
         department: str | None = None,
         status: str | None = None,
@@ -242,3 +249,29 @@ class EmployeeManager:
             ]
 
         return filtered_employees
+    
+
+    def search_employees(self, query: str) -> list[Employee]:
+
+        query = query.strip().casefold()
+
+        if not query:
+            return []
+
+        matching_employees = []
+
+        for employee in self.employees:
+            searchable_fields = (
+                employee.name,
+                employee.email,
+                employee.department,
+            )
+
+            if any(
+                query in str(value).casefold()
+                for value in searchable_fields
+                if value is not None
+            ):
+                matching_employees.append(employee)
+
+        return matching_employees

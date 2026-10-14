@@ -1,4 +1,6 @@
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -25,5 +27,18 @@ def write_json(filename: str, data: Any) -> None:
     DATA_DIRECTORY.mkdir(parents=True, exist_ok=True)
     file_path = DATA_DIRECTORY / filename
 
-    with file_path.open("w", encoding="utf-8") as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=DATA_DIRECTORY,
+            delete=False,
+        ) as file:
+            temporary_path = Path(file.name)
+            json.dump(data, file, indent=4, ensure_ascii=False)
+
+        os.replace(temporary_path, file_path)
+    finally:
+        if temporary_path is not None and temporary_path.exists():
+            temporary_path.unlink()

@@ -1,1 +1,3 @@
-from .employees import router  # noqa: F401
+from .employees import router
+
+__all__ = ["router"]
