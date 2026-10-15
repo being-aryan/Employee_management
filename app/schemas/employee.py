@@ -1,17 +1,47 @@
-from typing import Literal
+from enum import Enum
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, EmailStr, Field
 
-EmployeeStatus = Literal["active", "inactive", "on_leave"]
+T = TypeVar("T")
 
 
-class Employee(BaseModel):
+class APIResponse(BaseModel, Generic[T]):
+    success: bool = True
+    status_code: int
+    message: str
+    data: T
+
+
+class APIErrorResponse(BaseModel):
+    success: bool = False
+    status_code: int
+    message: str
+    error_code: str
+    details: list[dict[str, str]] | None = None
+
+
+class EmployeeStatus(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ON_LEAVE = "on_leave"
+
+
+class EmployeeBase(BaseModel):
     id: int = Field(ge=1)
     name: str = Field(min_length=2)
     email: EmailStr
     department: str = Field(min_length=2)
     salary: float = Field(ge=0)
     status: EmployeeStatus
+
+
+class Employee(EmployeeBase):
+    is_deleted: bool = False
+
+
+class DeletedEmployee(EmployeeBase):
+    is_deleted: bool = True
 
 
 class EmployeeStatusUpdate(BaseModel):

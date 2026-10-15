@@ -5,6 +5,9 @@ from .employee import (
     EmployeeReplace,
     EmployeeStatusUpdate,
     EmployeeUpdate,
+    APIResponse,
+    APIErrorResponse,
+    DeletedEmployee,
 )
 
 __all__ = [
@@ -16,4 +19,7 @@ __all__ = [
     EmployeeReplace,
     EmployeeStatusUpdate,
     EmployeeUpdate,
+    APIResponse,
+    APIErrorResponse,
+    DeletedEmployee,
 ]
