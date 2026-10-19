@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -13,6 +13,7 @@ from app.exceptions import (
     employee_email_exist_handler,
     employee_not_found_handler,
 )
+from app.middleware.cors import add_cors_middleware
 from app.routers import router as e
 from app.routers.auth import router as auth_router
 from app.routers.deparments import router as d
@@ -37,6 +38,9 @@ app.add_exception_handler(
     DepartmentNotFoundError,
     department_not_found_handler,
 )
+add_cors_middleware(app)
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(
     request: Request,
@@ -94,6 +98,7 @@ async def validation_exception_handler(
         },
     )
 
-app.include_router(auth_router,prefix="/api/v3")
-app.include_router(e,prefix="/api/v1")
-app.include_router(d,prefix="/api/v2")
+
+app.include_router(auth_router, prefix="/api/v3")
+app.include_router(e, prefix="/api/v1")
+app.include_router(d, prefix="/api/v2")

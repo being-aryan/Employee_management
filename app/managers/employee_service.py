@@ -1,4 +1,3 @@
-
 from app.exceptions import (
     DepartmentNotFoundError,
     EmployeeEmailAlreadyExistError,
@@ -14,7 +13,6 @@ from app.schemas import (
     EmployeeUpdate,
 )
 from app.storage.json_storage import read_json, write_json
-
 
 DEFAULT_EMPLOYEES: list[dict[str, object]] = [
     {
@@ -79,8 +77,7 @@ class EmployeeManager:
 
     def _save_employees(self) -> None:
         employee_data = [
-            employee.model_dump(mode="json")
-            for employee in self.employees
+            employee.model_dump(mode="json") for employee in self.employees
         ]
 
         write_json("employees.json", employee_data)
@@ -90,38 +87,26 @@ class EmployeeManager:
         employee_id: int,
     ) -> Employee:
         for employee in self.employees:
-            if (
-                employee.id == employee_id
-                and not employee.is_deleted
-            ):
+            if employee.id == employee_id and not employee.is_deleted:
                 return employee
 
         raise EmployeeNotFoundError("Employee not found")
 
     def get_all_employees(self) -> list[Employee]:
-        return [
-            employee
-            for employee in self.employees
-            if not employee.is_deleted
-        ]
+        return [employee for employee in self.employees if not employee.is_deleted]
 
     def get_deleted_employees(self) -> list[DeletedEmployee]:
         return [
-            DeletedEmployee.model_validate(
-                employee.model_dump(mode="json")
-            )
+            DeletedEmployee.model_validate(employee.model_dump(mode="json"))
             for employee in self.employees
             if employee.is_deleted
         ]
 
- 
     def create_employee(
         self,
         employee: CreateEmployee,
     ) -> Employee:
-        if not self.department_manager.department_exists(
-            employee.department
-        ):
+        if not self.department_manager.department_exists(employee.department):
             raise DepartmentNotFoundError(
                 f"Department '{employee.department}' does not exist"
             )
@@ -150,7 +135,6 @@ class EmployeeManager:
 
         return new_employee
 
-
     def get_employee_by_id(
         self,
         employee_id: int,
@@ -164,9 +148,7 @@ class EmployeeManager:
     ) -> Employee:
         existing_employee = self._get_active_employee(employee_id)
 
-        if not self.department_manager.department_exists(
-            employee.department
-        ):
+        if not self.department_manager.department_exists(employee.department):
             raise DepartmentNotFoundError(
                 f"Department '{employee.department}' does not exist"
             )
@@ -176,12 +158,12 @@ class EmployeeManager:
         for other_employee in self.employees:
             if (
                 other_employee.id != employee_id
+                and not other_employee.is_deleted
                 and other_employee.email.casefold() == email
             ):
                 raise EmployeeEmailAlreadyExistError(
                     "Employee with this email already exists"
                 )
-
         updated_employee = Employee(
             id=employee_id,
             **employee.model_dump(),
@@ -216,9 +198,7 @@ class EmployeeManager:
         if "department" in update_data:
             department = update_data["department"]
 
-            if not self.department_manager.department_exists(
-                department
-            ):
+            if not self.department_manager.department_exists(department):
                 raise DepartmentNotFoundError(
                     f"Department '{department}' does not exist"
                 )
@@ -229,6 +209,7 @@ class EmployeeManager:
             for other_employee in self.employees:
                 if (
                     other_employee.id != employee_id
+                    and not other_employee.is_deleted
                     and other_employee.email.casefold() == email
                 ):
                     raise EmployeeEmailAlreadyExistError(
@@ -264,20 +245,16 @@ class EmployeeManager:
 
         return updated_employee
 
-
     def delete_employee(self, employee_id: int) -> Employee:
         employee = self._get_active_employee(employee_id)
 
         index = self.employees.index(employee)
-        deleted_employee = employee.model_copy(
-            update={"is_deleted": True}
-        )
+        deleted_employee = employee.model_copy(update={"is_deleted": True})
 
         self.employees[index] = deleted_employee
         self._save_employees()
 
         return deleted_employee
-
 
     def restore_employee(
         self,
@@ -292,8 +269,7 @@ class EmployeeManager:
                 if (
                     other_employee.id != employee_id
                     and not other_employee.is_deleted
-                    and other_employee.email.casefold()
-                    == employee.email.casefold()
+                    and other_employee.email.casefold() == employee.email.casefold()
                 ):
                     raise EmployeeEmailAlreadyExistError(
                         "An active employee already uses this email"
@@ -322,9 +298,7 @@ class EmployeeManager:
             and max_salary is not None
             and min_salary > max_salary
         ):
-            raise ValueError(
-                "min_salary cannot be greater than max_salary"
-            )
+            raise ValueError("min_salary cannot be greater than max_salary")
 
         filtered_employees = self.get_all_employees()
 
@@ -332,15 +306,12 @@ class EmployeeManager:
             filtered_employees = [
                 employee
                 for employee in filtered_employees
-                if employee.department.casefold()
-                == department.casefold()
+                if employee.department.casefold() == department.casefold()
             ]
 
         if status is not None:
             filtered_employees = [
-                employee
-                for employee in filtered_employees
-                if employee.status == status
+                employee for employee in filtered_employees if employee.status == status
             ]
 
         if min_salary is not None:
@@ -377,10 +348,7 @@ class EmployeeManager:
                 employee.department,
             )
 
-            if any(
-                query in value.casefold()
-                for value in searchable_fields
-            ):
+            if any(query in value.casefold() for value in searchable_fields):
                 matching_employees.append(employee)
 
         return matching_employees

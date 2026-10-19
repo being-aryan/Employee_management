@@ -1,13 +1,14 @@
 from .admin import Admin, AdminLogin, TokenResponse
 from .employee import (
+    APIErrorResponse,
+    APIResponse,
     CreateEmployee,
+    DeletedEmployee,
     Employee,
     EmployeeReplace,
+    EmployeeStatus,
     EmployeeStatusUpdate,
     EmployeeUpdate,
-    APIResponse,
-    APIErrorResponse,
-    DeletedEmployee,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     APIResponse,
     APIErrorResponse,
     DeletedEmployee,
+    EmployeeStatus,
 ]

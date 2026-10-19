@@ -5,6 +5,8 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
+)
+from fastapi import (
     status as http_status,
 )
 
@@ -16,6 +18,7 @@ from app.schemas import (
     DeletedEmployee,
     Employee,
     EmployeeReplace,
+    EmployeeStatus,
     EmployeeStatusUpdate,
     EmployeeUpdate,
 )
@@ -25,11 +28,6 @@ router = APIRouter(
     tags=["Employees"],
     dependencies=[Depends(get_current_admin)],
 )
-
-
-@router.get("/health")
-def employee_health_check() -> dict[str, str]:
-    return {"status": "ok"}
 
 
 @router.post(
@@ -88,15 +86,11 @@ def search_employees(
 )
 def filter_employees(
     department: str | None = None,
-    status: str | None = None,
+    status: EmployeeStatus | None = None,
     min_salary: Annotated[float | None, Query(ge=0)] = None,
     max_salary: Annotated[float | None, Query(ge=0)] = None,
 ) -> APIResponse[list[Employee]]:
-    if (
-        min_salary is not None
-        and max_salary is not None
-        and min_salary > max_salary
-    ):
+    if min_salary is not None and max_salary is not None and min_salary > max_salary:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="min_salary cannot be greater than max_salary",
