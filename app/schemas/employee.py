@@ -1,7 +1,9 @@
+
 from enum import Enum
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, EmailStr, Field
+
 
 T = TypeVar("T")
 
@@ -70,3 +72,17 @@ class EmployeeReplace(BaseModel):
     department: str = Field(min_length=2)
     salary: float = Field(ge=0)
     status: EmployeeStatus
+
+
+class PaginationMeta(BaseModel):
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1)
+    total: int = Field(ge=0)
+    total_pages: int = Field(ge=0)
+    has_next: bool
+    has_previous: bool
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    items: list[T]
+    pagination: PaginationMeta

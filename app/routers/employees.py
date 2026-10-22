@@ -1,3 +1,4 @@
+
 from typing import Annotated
 
 from fastapi import (
@@ -22,6 +23,7 @@ from app.schemas import (
     EmployeeStatusUpdate,
     EmployeeUpdate,
 )
+from app.utils.pagination import paginate_items
 
 router = APIRouter(
     prefix="/employees",
@@ -50,47 +52,79 @@ def create_employee(
 
 @router.get(
     "",
-    response_model=APIResponse[list[Employee]],
-    response_model_exclude={"data": {"__all__": {"is_deleted"}}},
+    response_model=APIResponse[dict],
+    response_model_exclude={
+        "data": {"items": {"__all__": {"is_deleted"}}}
+    },
 )
-def get_all_employees():
+def get_all_employees(
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+):
     employees = employee_manager.get_all_employees()
 
+    paginated_data = paginate_items(
+        employees,
+        page=page,
+        page_size=page_size,
+    )
+
     return APIResponse(
-        status_code=200,
+        success=True,
+        status_code=http_status.HTTP_200_OK,
         message="Employees fetched successfully",
-        data=employees,
+        data=paginated_data,
     )
 
 
 @router.get(
     "/search",
-    response_model=APIResponse[list[Employee]],
+    response_model=APIResponse[dict],
+    response_model_exclude={
+        "data": {"items": {"__all__": {"is_deleted"}}}
+    },
 )
 def search_employees(
     q: Annotated[str, Query(min_length=1, max_length=100)],
-) -> APIResponse[list[Employee]]:
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+):
     employees = employee_manager.search_employees(q)
+
+    paginated_data = paginate_items(
+        employees,
+        page=page,
+        page_size=page_size,
+    )
 
     return APIResponse(
         success=True,
         status_code=http_status.HTTP_200_OK,
         message="Employee search completed successfully",
-        data=employees,
+        data=paginated_data,
     )
 
 
 @router.get(
     "/filter",
-    response_model=APIResponse[list[Employee]],
+    response_model=APIResponse[dict],
+    response_model_exclude={
+        "data": {"items": {"__all__": {"is_deleted"}}}
+    },
 )
 def filter_employees(
     department: str | None = None,
     status: EmployeeStatus | None = None,
     min_salary: Annotated[float | None, Query(ge=0)] = None,
     max_salary: Annotated[float | None, Query(ge=0)] = None,
-) -> APIResponse[list[Employee]]:
-    if min_salary is not None and max_salary is not None and min_salary > max_salary:
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+):
+    if (
+        min_salary is not None
+        and max_salary is not None
+        and min_salary > max_salary
+    ):
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="min_salary cannot be greater than max_salary",
@@ -103,26 +137,41 @@ def filter_employees(
         max_salary=max_salary,
     )
 
+    paginated_data = paginate_items(
+        employees,
+        page=page,
+        page_size=page_size,
+    )
+
     return APIResponse(
         success=True,
         status_code=http_status.HTTP_200_OK,
         message="Employees filtered successfully",
-        data=employees,
+        data=paginated_data,
     )
 
 
 @router.get(
     "/deleted",
-    response_model=APIResponse[list[DeletedEmployee]],
+    response_model=APIResponse[dict],
 )
-def get_deleted_employees() -> APIResponse[list[DeletedEmployee]]:
+def get_deleted_employees(
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+):
     employees = employee_manager.get_deleted_employees()
+
+    paginated_data = paginate_items(
+        employees,
+        page=page,
+        page_size=page_size,
+    )
 
     return APIResponse(
         success=True,
         status_code=http_status.HTTP_200_OK,
         message="Deleted employees retrieved successfully",
-        data=employees,
+        data=paginated_data,
     )
 
 
@@ -236,7 +285,8 @@ def delete_employee(employee_id: int):
     deleted_employee = employee_manager.delete_employee(employee_id)
 
     return APIResponse(
-        status_code=200,
+        success=True,
+        status_code=http_status.HTTP_200_OK,
         message="Employee soft-deleted successfully",
         data=deleted_employee,
     )
