@@ -13,6 +13,7 @@ from app.exceptions import (
     employee_email_exist_handler,
     employee_not_found_handler,
 )
+from app.middleware.auth import add_auth_middleware
 from app.middleware.cors import add_cors_middleware
 from app.routers import router as e
 from app.routers.auth import router as auth_router
@@ -39,6 +40,7 @@ app.add_exception_handler(
     department_not_found_handler,
 )
 add_cors_middleware(app)
+add_auth_middleware(app)
 
 
 @app.exception_handler(StarletteHTTPException)

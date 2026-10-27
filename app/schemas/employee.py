@@ -1,9 +1,7 @@
-
 from enum import Enum
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, EmailStr, Field
-
 
 T = TypeVar("T")
 

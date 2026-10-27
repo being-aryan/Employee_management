@@ -1,9 +1,7 @@
-
 from typing import Annotated
 
 from fastapi import (
     APIRouter,
-    Depends,
     HTTPException,
     Query,
 )
@@ -11,12 +9,10 @@ from fastapi import (
     status as http_status,
 )
 
-from app.dependencies import get_current_admin
 from app.managers import employee_manager
 from app.schemas import (
     APIResponse,
     CreateEmployee,
-    DeletedEmployee,
     Employee,
     EmployeeReplace,
     EmployeeStatus,
@@ -28,7 +24,6 @@ from app.utils.pagination import paginate_items
 router = APIRouter(
     prefix="/employees",
     tags=["Employees"],
-    dependencies=[Depends(get_current_admin)],
 )
 
 
@@ -53,9 +48,7 @@ def create_employee(
 @router.get(
     "",
     response_model=APIResponse[dict],
-    response_model_exclude={
-        "data": {"items": {"__all__": {"is_deleted"}}}
-    },
+    response_model_exclude={"data": {"items": {"__all__": {"is_deleted"}}}},
 )
 def get_all_employees(
     page: Annotated[int, Query(ge=1)] = 1,
@@ -80,9 +73,7 @@ def get_all_employees(
 @router.get(
     "/search",
     response_model=APIResponse[dict],
-    response_model_exclude={
-        "data": {"items": {"__all__": {"is_deleted"}}}
-    },
+    response_model_exclude={"data": {"items": {"__all__": {"is_deleted"}}}},
 )
 def search_employees(
     q: Annotated[str, Query(min_length=1, max_length=100)],
@@ -108,9 +99,7 @@ def search_employees(
 @router.get(
     "/filter",
     response_model=APIResponse[dict],
-    response_model_exclude={
-        "data": {"items": {"__all__": {"is_deleted"}}}
-    },
+    response_model_exclude={"data": {"items": {"__all__": {"is_deleted"}}}},
 )
 def filter_employees(
     department: str | None = None,
@@ -120,11 +109,7 @@ def filter_employees(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 10,
 ):
-    if (
-        min_salary is not None
-        and max_salary is not None
-        and min_salary > max_salary
-    ):
+    if min_salary is not None and max_salary is not None and min_salary > max_salary:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="min_salary cannot be greater than max_salary",
