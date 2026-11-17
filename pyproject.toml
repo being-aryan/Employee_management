@@ -1,0 +1,59 @@
+
+[tool.poetry]
+name = "employee-management-api"
+version = "0.1.0"
+description = "Employee Management REST API built with FastAPI"
+authors = ["Your Name"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.54.0" }
+pydantic = { extras = ["email"], version = "^2.13.5" }
+pwdlib = { extras = ["argon2"], version = "^0.3.1" }
+pyjwt = "^2.15.1"
+pydantic-settings = "^2.15.0"
+sqlalchemy = "^2.1.6"
+asyncpg = "^0.31.0"
+greenlet = "^3.5.6"
+redis = "^8.1.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.8.0"
+pytest = "^9.2.0"
+httpx = "^0.28.1"
+alembic = "^1.20.1"
+pytest-asyncio = "^1.4.1"
+pytest-cov = "^7.1.0"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+ignore = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
