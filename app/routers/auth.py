@@ -84,10 +84,22 @@ async def verify_admin_otp(
         submitted_otp=payload.otp,
     )
 
-    if admin_id is None:
+    if admin_id == "invalid":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired OTP",
+            detail="Invalid OTP",
+        )
+
+    if admin_id == "expired":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="OTP has expired",
+        )
+
+    if admin_id == "locked":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Maximum OTP verification attempts exceeded",
         )
 
     auth_manager = AuthManager(session)

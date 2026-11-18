@@ -5,7 +5,6 @@ from app.config import settings
 from app.managers.otp_manager import OTPManager
 from app.redis_client import redis_client
 
-
 otp_manager = OTPManager(
     redis_client=redis_client,
     secret_key=bytes.fromhex(settings.otp_hmac_secret_key),

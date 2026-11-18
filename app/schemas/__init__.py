@@ -1,4 +1,10 @@
-from .admin import Admin, AdminLogin, TokenResponse,OTPChallengeResponse,OTPVerificationRequest
+from .admin import (
+    Admin,
+    AdminLogin,
+    OTPChallengeResponse,
+    OTPVerificationRequest,
+    TokenResponse,
+)
 from .employee import (
     APIErrorResponse,
     APIResponse,

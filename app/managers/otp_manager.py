@@ -1,4 +1,6 @@
+
 import hmac
+from typing import Literal
 
 from redis.asyncio import Redis
 
@@ -92,9 +94,9 @@ class OTPManager:
         self,
         challenge_id: str,
         submitted_otp: str,
-    ) -> int | None:
+    ) -> int | Literal["invalid", "expired", "locked"]:
         if not submitted_otp.isdigit() or len(submitted_otp) != 6:
-            return None
+            return "invalid"
 
         redis_key = f"otp:challenge:{challenge_id}"
 
@@ -104,7 +106,7 @@ class OTPManager:
         )
 
         if stored_digest is None:
-            return None
+            return "expired"
 
         submitted_digest = generate_otp_digest(
             submitted_otp,
@@ -125,12 +127,16 @@ class OTPManager:
             self.MAX_ATTEMPTS,
         )
 
+        if result == -1:
+            return "expired"
+
+        if result == -2:
+            return "locked"
+
+        if result == 0:
+            return "invalid"
+
         if isinstance(result, bytes):
             result = result.decode("utf-8")
 
-        try:
-            admin_id = int(result)
-        except (TypeError, ValueError):
-            return None
-
-        return admin_id if admin_id > 0 else None
+        return int(result)
